@@ -1,0 +1,30 @@
+# Python environments
+.venv/
+.venv-run/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# WhatsApp browser profiles and sessions
+profiles/
+
+# Local Excel files and reports
+backup.xlsx
+done_history.xlsx
+swap_report.xlsx
+
+# Contact data
+*.csv
+
+# Environment variables and secrets
+.env
+.env.*
+
+# Editor and operating system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

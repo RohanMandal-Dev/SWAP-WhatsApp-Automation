@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>S.W.A.P</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body {
+    margin:0;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg,#0f172a,#020617);
+    color:white;
+}
+
+.container {
+    max-width: 900px;
+    margin:auto;
+    padding:20px;
+}
+
+.header {
+    text-align:center;
+    font-size:32px;
+    font-weight:bold;
+    color:#38bdf8;
+    margin-bottom:20px;
+}
+
+.card {
+    background:#1e293b;
+    padding:20px;
+    margin-bottom:15px;
+    border-radius:12px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.3);
+}
+
+input {
+    padding:10px;
+    border:none;
+    border-radius:6px;
+    margin:5px;
+}
+
+button {
+    width:100%;
+    padding:12px;
+    margin-top:10px;
+    border:none;
+    border-radius:8px;
+    font-size:15px;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+button:hover {
+    transform:scale(1.02);
+}
+
+.start { background:#22c55e; }
+.resume { background:#facc15; color:black;}
+.stop { background:#ef4444; }
+.download { background:#3b82f6; }
+.login { background:#8b5cf6; }
+
+.status {
+    display:flex;
+    justify-content:space-between;
+    margin-top:10px;
+    font-size:14px;
+}
+
+.progress-bar {
+    height:8px;
+    background:#334155;
+    border-radius:10px;
+    overflow:hidden;
+    margin-top:10px;
+}
+
+.progress-fill {
+    height:100%;
+    background:#22c55e;
+    width:0%;
+}
+
+table {
+    width:100%;
+    margin-top:10px;
+    border-collapse: collapse;
+}
+
+td, th {
+    padding:10px;
+    border-bottom:1px solid #334155;
+    text-align:left;
+}
+
+.done { color:#22c55e; }
+.failed { color:#ef4444; }
+.retry { color:#facc15; }
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="header">S.W.A.P 🚀</div>
+
+<!-- Upload -->
+<div class="card">
+<form method="POST" enctype="multipart/form-data">
+<input type="file" name="file" required><br>
+
+Delay (minutes):
+<input type="number" name="min" value="9">
+to
+<input type="number" name="sec" value="11">
+
+<button type="submit">Upload Contacts</button>
+</form>
+</div>
+
+<!-- Controls -->
+<div class="card">
+
+<button class="login" onclick="loginAll()">Login All Accounts</button>
+
+<button class="start" onclick="start()">Start</button>
+<button class="resume" onclick="resume()">Resume</button>
+<button class="stop" onclick="stop()">Stop</button>
+<button class="download" onclick="download()">Download Report</button>
+
+<div class="status">
+<div id="progress">0 / 0</div>
+<div id="timer">0 sec</div>
+</div>
+
+<div class="progress-bar">
+<div id="bar" class="progress-fill"></div>
+</div>
+
+</div>
+
+<!-- Table -->
+<div class="card">
+<table id="table"></table>
+</div>
+
+</div>
+
+<script>
+
+let running = false;
+
+function start(){
+    fetch("/start");
+    running = true;
+}
+
+function resume(){
+    fetch("/resume");
+    running = true;
+}
+
+function stop(){
+    fetch("/stop");
+    running = false;
+    document.getElementById("timer").innerText = "Stopped";
+}
+
+function loginAll(){
+    alert("Scan QR one by one for each account");
+    fetch("/login_all");
+}
+
+function download(){
+    window.location="/download";
+}
+
+function update(){
+fetch("/status")
+.then(r=>r.json())
+.then(data=>{
+
+// progress text
+document.getElementById("progress").innerText =
+data.done + " / " + data.total;
+
+// progress bar
+let percent = data.total > 0 ? (data.done / data.total) * 100 : 0;
+document.getElementById("bar").style.width = percent + "%";
+
+// timer
+if(data.done === data.total && data.total > 0){
+    running = false;
+    document.getElementById("timer").innerText = "Completed ✅";
+}else if(running){
+    document.getElementById("timer").innerText =
+    "Next: " + data.next_time + " sec";
+}
+
+// table
+let html = "<tr><th>Phone</th><th>Status</th></tr>";
+
+data.contacts.forEach(c=>{
+    let cls="";
+    if(c.status.includes("DONE")) cls="done";
+    if(c.status.includes("FAILED")) cls="failed";
+    if(c.status.includes("RETRY")) cls="retry";
+
+    html += `<tr>
+        <td>${c.phone}</td>
+        <td class="${cls}">${c.status}</td>
+    </tr>`;
+});
+
+document.getElementById("table").innerHTML = html;
+
+});
+}
+
+setInterval(update,1000);
+
+</script>
+
+</body>
+</html>
